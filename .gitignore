@@ -5,8 +5,10 @@ __pycache__/
 
 # C extensions
 *.so
-dataset
+
 .idea
+dataset
+
 # Distribution / packaging
 .Python
 build/

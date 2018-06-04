@@ -22,7 +22,7 @@ def export_vocab(comments, categories, vocab_size, export=True):
 
 def map_func(x):
     if x not in vocab.values():
-        return -1
+        return 0
     else:
         return vocab[x]
 

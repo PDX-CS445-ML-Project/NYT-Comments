@@ -60,10 +60,8 @@ def map_sentences(comments, categories, export=True):
         progress(index, ctlen, suffix="converting categories")
         categories[key] = [list(map(map_func, category)) for category in categories[key]]
     if export:
-        '''
         with open("mapped_comments.json", "w") as f:
             json.dump(comments, f, indent=2)
-        '''
         with open("mapped_categories.json", "w") as f:
             json.dump(categories, f, indent=2)
     return comments, categories
@@ -89,19 +87,14 @@ def create_trainset(window, export=True):
 
 
 if __name__ == "__main__":
-    '''
-    with open("../NYT/commentsMarch2018.json") as fp:
-        comments = json.load(fp)
-    with open("../NYT/categoriesMarch2018.json") as fp:
-        categories = json.load(fp)
     
     with open("../dataset/comments.json") as fp:
         comments = json.load(fp)
     
     with open("../dataset/categories.json") as fp:
         categories = json.load(fp)
-    '''
+
     print("Json loaded")
     # vocab = export_vocab(comments, categories, 35000)
     # comments, categories = map_sentences(None, categories)
-    create_trainset(4)
+    #create_trainset(4)

@@ -6,8 +6,7 @@ __pycache__/
 # C extensions
 *.so
 .idea
-categories.json
-comments.json
+dataset
 # Distribution / packaging
 .Python
 build/

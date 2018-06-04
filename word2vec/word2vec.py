@@ -5,12 +5,16 @@ from sklearn.model_selection import train_test_split
 import tflearn
 import collections
 import json
+import os
 
 
 class Word2Vec(object):
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, x, y, vocab_size, embedd_size, learning_rate, nce_sample_size, skipgram=True):
+        self.input = x,
+        self.target = y,
+        self.optimizer, self.loss, self.x, self.y, self.sess = Word2Vec.create_nn(vocab_size, embedd_size,
+                                                                                  nce_sample_size, skipgram)
 
     @staticmethod
     def vocab_to_num(words, vocab_size):
@@ -54,13 +58,13 @@ class Word2Vec(object):
         nce_biases = tf.Variable(tf.zeros([vocab_size]), name="nce_biases")
         word_embed = tf.nn.embedding_lookup(Embedding, x, name="word_embed_lookup")
         train_labels = tf.reshape(y, [tf.shape(y)[0], 1])
-        loss =  tf.reduce_mean(tf.nn.nce_loss(weights=nce_weights,
-                                              biases=nce_biases,
-                                              labels=train_labels,
-                                              inputs=word_embed,
-                                              num_sampled=nce_sample_size,
-                                              num_classes=vocab_size,
-                                              num_true=1))
+        loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weights,
+                                             biases=nce_biases,
+                                             labels=train_labels,
+                                             inputs=word_embed,
+                                             num_sampled=nce_sample_size,
+                                             num_classes=vocab_size,
+                                             num_true=1))
         optimizer = tf.contrib.layers.optimize_loss(loss,
                                                     tf.train.get_global_step(),
                                                     learning_rate,
@@ -70,3 +74,22 @@ class Word2Vec(object):
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
         return optimizer, loss, x, y, sess
+
+    def train(self, batch_size, epochs):
+        x_train, x_test, y_train, y_test = train_test_split(self.input, self.target)
+        num_batches = len(x_train) // batch_size
+        saver = tf.train.Saver()
+
+        for epoch in range(epochs):
+            for i in range(num_batches):
+                if i != range(num_batches - 1):
+                    x_batch = x_train[i * batch_size:i * batch_size + batch_size]
+                    y_batch = y_train[i * batch_size:i * batch_size + batch_size]
+                else:
+                    x_batch = x_train[i * batch_size:]
+                    y_batch = y_train[i * batch_size:]
+
+                _, l = self.sess.run([self.optimizer, self.loss], feed_dict={self.x: x_batch, self.y: y_batch})
+                if i > 0 and i % 1000 == 0:
+                    print("STEP", i, "of", num_batches, "LOSS:", l)
+        save_path = saver.save(self.sess, os.path.join("tf_log", "word2vec_model.ckpt"))

@@ -6,6 +6,7 @@ import tflearn
 import collections
 import json
 import os
+import sys
 
 
 class Word2Vec(object):
@@ -15,6 +16,20 @@ class Word2Vec(object):
         self.target = y,
         self.optimizer, self.loss, self.x, self.y, self.sess = Word2Vec.create_nn(vocab_size, embedd_size,
                                                                                   nce_sample_size, skipgram)
+
+    @staticmethod
+    def progress(count, total, suffix=''):
+        bar_len = 60
+
+        filled_len = int(round(bar_len * count / float(total)))
+
+        percents = round(100.0 * count / float(total), 1)
+        bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+        sys.stdout.write('\r[%s] %s%s ...%s' % (bar, percents, '%', suffix))
+        sys.stdout.flush()
+        if count == total:
+            print("")
 
     @staticmethod
     def vocab_to_num(words, vocab_size):
@@ -32,12 +47,13 @@ class Word2Vec(object):
         neighbor_words = []
         context_words = []
         for sentence in range(sentences.shape[0]):
+            Word2Vec.progress(sentence, sentences.shape[0], "building dataset")
             contexts = sentences[sentence][window:-window]
             for index in range(len(contexts)):
                 context = contexts[index]
                 neighbors = np.array([])
                 prev_words = sentences[sentence][index: window + index]
-                next_words = sentences[sentence][index + 1:2 * window + index + 1]
+                next_words = sentences[sentence][index + window + 1:2 * window + index + 1]
                 neighbors = np.append(neighbors, [prev_words, next_words]).flatten().tolist()
                 for i in range(window * 2):
                     context_words.append(context)

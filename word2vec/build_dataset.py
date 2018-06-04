@@ -43,7 +43,7 @@ def map_sentences(comments, categories, export=True):
     return comments, categories
 
 
-def create_trainset(window, export=True, skipgram=True):
+def create_trainset(window, export=True):
     with open("mapped_comments.json") as f:
         comments = json.load(f)
     with open("mapped_categories.json") as f:
@@ -55,20 +55,12 @@ def create_trainset(window, export=True, skipgram=True):
         sentences.extend((categories[key]))
     sentences = list(filter(lambda x: x, sentences))
     sentences = np.array(sentences)
-    neighbor_words = []
-    context_words = []
-    for sentence in range(sentences.shape[0]):
-        contexts = sentences[sentence][window:-window]
-        for index in range(len(contexts)):
-            context = contexts[index]
-            neighbors = np.array([])
-            prev_words = sentences[sentence][index: window + index]
-            next_words = sentences[sentence][index + 1:2 * window + index + 1]
-            neighbors = np.append(neighbors, [prev_words, next_words]).flatten().tolist()
-            for i in range(window * 2):
-                context_words.append(context)
-                neighbor_words.append(neighbors[i])
-
+    contexts, neighbors = Word2Vec.create_dataset(sentences, window)
+    if export:
+        with open("contexts.json", "w") as fp:
+            json.dump(contexts, fp, indent=2)
+        with open("neighbors.json", "w") as fp:
+            json.dump(neighbors, fp, indent=2)
 
 
 if __name__ == "__main__":

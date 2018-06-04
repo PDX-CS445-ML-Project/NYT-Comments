@@ -17,7 +17,7 @@ def export_vocab(comments, categories, vocab_size, export=True):
     if export:
         with open("vocab.json", "w") as f:
             json.dump(vocab, f, indent=2)
-    return comments, categories
+    return vocab
 
 
 def map_func(x):
@@ -32,9 +32,9 @@ def map_sentences(comments, categories, export=True):
     with open("vocab.json") as f:
         vocab = json.load(f)
     for key in comments:
-        comments[key] = [list(map(map_func, comment) for comment in comments[key])]
+        comments[key] = [list(map(map_func, comment)) for comment in comments[key]]
     for key in categories:
-        categories[key] = [list(map(map_func, category) for category in comments[key])]
+        categories[key] = [list(map(map_func, category)) for category in comments[key]]
     if export:
         with open("mapped_comments.json", "w") as f:
             json.dump(comments, f, indent=2)
@@ -68,5 +68,7 @@ if __name__ == "__main__":
         comments = json.load(fp)
     with open("../dataset/categories.json") as fp:
         categories = json.load(fp)
-    export_vocab(comments, categories, 35000)
+    #vocab = export_vocab(comments, categories, 35000)
+    comments, categories = map_sentences(comments, categories)
+
 

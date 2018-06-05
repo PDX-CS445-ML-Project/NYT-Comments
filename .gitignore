@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 word2vec/*.json
+word2vec/*.dat
+word2vec/*.np
 .idea
 dataset
 NYT

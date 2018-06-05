@@ -80,21 +80,21 @@ def create_trainset(window, export=True):
     sentences = np.array(sentences)
     contexts, neighbors = Word2Vec.create_dataset(sentences, window)
     if export:
-        with open("contexts.json", "w") as fp:
-            json.dump(contexts, fp, indent=2)
-        with open("neighbors.json", "w") as fp:
-            json.dump(neighbors, fp, indent=2)
+        npc = np.array(contexts)
+        npn = np.array(neighbors)
+        npc.tofile('npcontexts.dat')
+        npn.tofile('npneighbors.dat')
 
 
 if __name__ == "__main__":
     
-    with open("../dataset/comments.json") as fp:
-        comments = json.load(fp)
+    #with open("../dataset/comments.json") as fp:
+        #comments = json.load(fp)
     
-    with open("../dataset/categories.json") as fp:
-        categories = json.load(fp)
+    #with open("../dataset/categories.json") as fp:
+        #categories = json.load(fp)
 
     print("Json loaded")
     # vocab = export_vocab(comments, categories, 35000)
-    # comments, categories = map_sentences(None, categories)
-    #create_trainset(4)
+    #comments, categories = map_sentences(None, categories)
+    create_trainset(4)

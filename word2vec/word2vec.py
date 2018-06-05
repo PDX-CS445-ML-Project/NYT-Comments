@@ -7,15 +7,22 @@ import collections
 import json
 import os
 import sys
+import ijson
 
 
 class Word2Vec(object):
 
-    def __init__(self, x, y, vocab_size, embedd_size, learning_rate, nce_sample_size, skipgram=True):
-        self.input = x,
-        self.target = y,
-        self.optimizer, self.loss, self.x, self.y, self.sess = Word2Vec.create_nn(vocab_size, embedd_size,
-                                                                                  nce_sample_size, skipgram)
+    def __init__(self, x, y, vocab_size, embedd_size, learning_rate, nce_sample_size, save, skipgram=True,
+                 batch_size=32):
+        self.savefile = save
+        self.vocab_size = vocab_size
+        self.input = x
+        self.batch_size = batch_size
+        self.target = y
+        self.optimizer, self.loss, self.x, self.y, self.sess, self.embed = Word2Vec.create_nn(vocab_size, embedd_size,
+                                                                                              learning_rate,
+                                                                                              nce_sample_size,
+                                                                                              batch_size, skipgram)
 
     @staticmethod
     def progress(count, total, suffix=''):
@@ -61,10 +68,10 @@ class Word2Vec(object):
         return context_words, neighbor_words
 
     @staticmethod
-    def create_nn(vocab_size, embedding_size, learning_rate, nce_sample_size, skipgram=True):
+    def create_nn(vocab_size, embedding_size, learning_rate, nce_sample_size, batch_size, skipgram=True):
         if skipgram:
-            x = tf.placeholder(tf.int32, shape=[None, ], name="contexts")
-            y = tf.placeholder(tf.int32, shape=[None, ], name="neighbors")
+            x = tf.placeholder(tf.int32, shape=[batch_size], name="contexts")
+            y = tf.placeholder(tf.int32, shape=[batch_size, 1], name="neighbors")
         else:
             x = tf.placeholder(tf.int32, shape=[None, ], name="neighbors")
             y = tf.placeholder(tf.int32, shape=[None, ], name="contexts")
@@ -73,10 +80,10 @@ class Word2Vec(object):
                                   name="nce_weights")
         nce_biases = tf.Variable(tf.zeros([vocab_size]), name="nce_biases")
         word_embed = tf.nn.embedding_lookup(Embedding, x, name="word_embed_lookup")
-        train_labels = tf.reshape(y, [tf.shape(y)[0], 1])
+        # train_labels = tf.reshape(y, [tf.shape(y)[0], 1])
         loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weights,
                                              biases=nce_biases,
-                                             labels=train_labels,
+                                             labels=y,
                                              inputs=word_embed,
                                              num_sampled=nce_sample_size,
                                              num_classes=vocab_size,
@@ -89,23 +96,32 @@ class Word2Vec(object):
                                                     name="optimizer")
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        return optimizer, loss, x, y, sess
+        return optimizer, loss, x, y, sess, Embedding
 
-    def train(self, batch_size, epochs):
-        x_train, x_test, y_train, y_test = train_test_split(self.input, self.target)
-        num_batches = len(x_train) // batch_size
-        saver = tf.train.Saver()
-
+    def train(self, epochs):
+        with open("vocab.json") as fp:
+            vocab = json.load(fp)
+        # x_train, x_test, y_train, y_test = train_test_split(self.input, self.target)
+        print(type(self.input))
+        num_batches = self.input.shape[0] // self.batch_size
+        print(num_batches)
+        saver = tf.train.Saver([self.embed])
         for epoch in range(epochs):
             for i in range(num_batches):
                 if i != range(num_batches - 1):
-                    x_batch = x_train[i * batch_size:i * batch_size + batch_size]
-                    y_batch = y_train[i * batch_size:i * batch_size + batch_size]
+                    x_batch = self.input[i * self.batch_size:i * self.batch_size + self.batch_size]
+                    y_batch = self.target[i * self.batch_size:i * self.batch_size + self.batch_size]
                 else:
-                    x_batch = x_train[i * batch_size:]
-                    y_batch = y_train[i * batch_size:]
+                    x_batch = self.input[i * self.batch_size:]
+                    y_batch = self.target[i * self.batch_size:]
 
-                _, l = self.sess.run([self.optimizer, self.loss], feed_dict={self.x: x_batch, self.y: y_batch})
-                if i > 0 and i % 1000 == 0:
-                    print("STEP", i, "of", num_batches, "LOSS:", l)
-        save_path = saver.save(self.sess, os.path.join("tf_log", "word2vec_model.ckpt"))
+                _, l = self.sess.run([self.optimizer, self.loss],
+                                     feed_dict={self.x: x_batch.reshape((x_batch.shape[0])),
+                                                self.y: y_batch.reshape((y_batch.shape[0], 1))})
+                if i % 100 == 0:
+                    print("STEP " + str(i) + " of " + str(num_batches) + " LOSS: " + str(l))
+                if l < 5.0 and i > 100000:
+                    embed = self.embed[:].eval(session=self.sess)
+                    embed.tofile("vectorspace" + str(embed.shape[0]) + "x" + str(embed.shape[1]) + ".np")
+                    return
+        save_path = saver.save(self.sess, os.path.join("tf_log", self.savefile))

@@ -8,6 +8,7 @@ __pycache__/
 word2vec/*.json
 word2vec/*.dat
 word2vec/*.np
+word2vec/*.npy
 .idea
 dataset
 NYT

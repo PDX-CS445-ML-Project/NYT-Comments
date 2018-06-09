@@ -38,8 +38,6 @@ def intersect_dicts(*dicts: dict):
 
 
 def average_mapped_dict(mapped_dict: dict, weight_matrix: np.ndarray):
-    overflow = dict()
-    # np.seterr(all='raise')
     mapped_dict_len = len(mapped_dict)
     prog = 0
     # Loop through each article
@@ -53,23 +51,14 @@ def average_mapped_dict(mapped_dict: dict, weight_matrix: np.ndarray):
             if sentence_vector_len <= 0:
                 raise RuntimeError("Sentence vector must have at least one element")
             # Get initial weight vector from sentence vector
-            averaged_vector = weight_matrix[sentence_vector[0]]  # type: np.ndarray
-            try:
-                # Sum the remaining weight vectors using the sentence vector for indexing
-                for i in range(1, sentence_vector_len):
-                    averaged_vector += weight_matrix[sentence_vector[i]]
-            except FloatingPointError:
-                print("Floating point error occured during vector summation: " + str(article_id), file=sys.stderr)
-                for i in range(1, sentence_vector_len):
-                    print(str(sentence_vector[i]) + " => " + str(weight_matrix[sentence_vector[i]]), file=sys.stderr)
-                    overflow[sentence_vector[i]] = True
+            averaged_vector = weight_matrix[sentence_vector[0]].copy()  # type: np.ndarray
+            # Sum the remaining weight vectors using the sentence vector for indexing
+            for i in range(1, sentence_vector_len):
+                averaged_vector += weight_matrix[sentence_vector[i]]
             # Divide by the vector length to compute the average
             averaged_vector /= sentence_vector_len
             # Replace the original sentence vector with the averaged weight vector
             sentence_vector_list[sentence_vector_index] = averaged_vector
-            # Debugging: Print overflow row indices
-            if len(overflow) > 0:
-                print(sorted(overflow.keys()))
         prog += 1
     progress(mapped_dict_len, mapped_dict_len)
 
@@ -79,8 +68,6 @@ def main():
     # Each row corresponds to a word in vector form
     print("Loading skipgram matrix...", end="")
     skipgram_matrix = np.load("../resources/skipgram35000x10.npy")
-    for k in [0, 3, 5, 6, 7, 32, 35, 39, 53, 55, 60, 61, 68, 75, 96, 128, 130, 138, 152, 186, 195, 215, 218, 224, 231, 233, 244, 257, 269, 276, 302, 307, 317, 339, 371, 385, 397, 455, 509, 572, 575, 585, 631, 678, 692, 751, 760, 826, 866, 940, 960, 990, 1019, 1053, 1114, 1122, 1144, 1182, 1203, 1380, 1418, 1569, 1628, 1639, 1973, 2024, 2043, 2099, 2176, 2222, 2249, 2491, 2546, 2552, 2584, 2700, 2709, 2825, 2837, 2954, 3004, 3208, 3349, 3541, 4000, 4536, 4638, 5663, 5757, 6045, 6494, 6499, 7659, 7868, 8208, 8354, 8561, 8778, 8863, 9008, 13237, 26916, 32592]:
-        print(skipgram_matrix[k])
     print(" Done.")
 
     # Load vocabulary map (word -> row index into skipgram matrix)

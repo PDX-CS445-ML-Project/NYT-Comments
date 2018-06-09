@@ -1,4 +1,5 @@
 *.npy
+word2vec/tf_log/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

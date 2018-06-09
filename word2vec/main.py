@@ -1,4 +1,4 @@
-from word2vec.word2vec import Word2Vec
+from word2vec import Word2Vec
 import numpy as np
 
 

@@ -1,4 +1,4 @@
-from word2vec import Word2Vec
+from word2vec.word2vec import Word2Vec
 import itertools
 import json
 import numpy as np
@@ -15,7 +15,7 @@ def export_vocab(comments, categories, vocab_size, export=True):
         words.extend(list(itertools.chain.from_iterable(categories[key])))
     vocab = Word2Vec.vocab_to_num(words, vocab_size)
     if export:
-        with open("vocab.json", "w") as f:
+        with open("../resources/vocab.json", "w") as f:
             json.dump(vocab, f, indent=2)
     return vocab
 
@@ -46,7 +46,7 @@ def progress(count, total, suffix=''):
 
 def map_sentences(comments, categories, export=True):
     global vocab  # global for map function
-    with open("vocab.json") as f:
+    with open("../resources/vocab.json") as f:
         vocab = json.load(f)
     print("mapping words to ints")
     '''

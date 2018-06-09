@@ -1,13 +1,9 @@
 import tensorflow as tf
 import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-import tflearn
 import collections
 import json
 import os
 import sys
-import ijson
 
 
 class Word2Vec(object):
@@ -45,7 +41,7 @@ class Word2Vec(object):
         word_to_int = {}
         for word, _ in count:
             word_to_int[word] = len(word_to_int)
-        with open("vocab.json", "w") as f:
+        with open("../resources/vocab.json", "w") as f:
             json.dump(word_to_int, f, indent=2)
         return word_to_int
 
@@ -75,11 +71,11 @@ class Word2Vec(object):
         else:
             x = tf.placeholder(tf.int32, shape=[None, ], name="neighbors")
             y = tf.placeholder(tf.int32, shape=[None, ], name="contexts")
-        Embedding = tf.Variable(tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0), name="word_embeddings")
+        embedding = tf.Variable(tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0), name="word_embeddings")
         nce_weights = tf.Variable(tf.truncated_normal([vocab_size, embedding_size], stddev=tf.sqrt(1 / embedding_size)),
                                   name="nce_weights")
         nce_biases = tf.Variable(tf.zeros([vocab_size]), name="nce_biases")
-        word_embed = tf.nn.embedding_lookup(Embedding, x, name="word_embed_lookup")
+        word_embed = tf.nn.embedding_lookup(embedding, x, name="word_embed_lookup")
         # train_labels = tf.reshape(y, [tf.shape(y)[0], 1])
         loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weights,
                                              biases=nce_biases,
@@ -96,10 +92,10 @@ class Word2Vec(object):
                                                     name="optimizer")
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        return optimizer, loss, x, y, sess, Embedding
+        return optimizer, loss, x, y, sess, embedding
 
     def train(self, epochs):
-        with open("vocab.json") as fp:
+        with open("../resources/vocab.json") as fp:
             vocab = json.load(fp)
         # x_train, x_test, y_train, y_test = train_test_split(self.input, self.target)
         print(type(self.input))

@@ -200,7 +200,8 @@ def run_sample(word2vec_model: str, sample_size, averaged_category_map, averaged
         "weights": gmm.weights_,
         "means": gmm.means_,
         "covariances": gmm.covariances_,
-        "precisions": gmm.precisions_
+        "precisions": gmm.precisions_,
+        "precisions_cholesky": gmm.precisions_cholesky_
     }
 
     np.save("../resources/gmm_" + str(sample_size) + "_" + word2vec_model + ".npy", gmm_data)

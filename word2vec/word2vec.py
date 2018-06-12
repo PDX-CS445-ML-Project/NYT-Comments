@@ -1,3 +1,9 @@
+'''
+Author: John Karasev
+Word2vec class includes methods to prepare dataset as well as to train
+'''
+
+
 import tensorflow as tf
 import numpy as np
 import collections
@@ -19,7 +25,7 @@ class Word2Vec(object):
                                                                                               learning_rate,
                                                                                               nce_sample_size,
                                                                                               batch_size, skipgram)
-
+    # progress bar
     @staticmethod
     def progress(count, total, suffix=''):
         bar_len = 60
@@ -34,6 +40,7 @@ class Word2Vec(object):
         if count == total:
             print("")
 
+    # map words to integers. vocab_size specefies how many words we want in the vocabulary.
     @staticmethod
     def vocab_to_num(words, vocab_size):
         count = [['UNK', -1]]
@@ -45,6 +52,9 @@ class Word2Vec(object):
             json.dump(word_to_int, f, indent=2)
         return word_to_int
 
+    # creates the dataset that the wrod2vec trains on.
+    # creates center_word -> neighbor word mappings
+    # window is a hyper par that specifies how many neighbors to consider from each side of the center word.
     @staticmethod
     def create_dataset(sentences, window):
         neighbor_words = []
@@ -63,6 +73,7 @@ class Word2Vec(object):
                     neighbor_words.append(neighbors[i])
         return context_words, neighbor_words
 
+    # create the Word2Vec NN, use NCE loss and adam optimizer.
     @staticmethod
     def create_nn(vocab_size, embedding_size, learning_rate, nce_sample_size, batch_size, skipgram=True):
         if skipgram:
@@ -94,6 +105,7 @@ class Word2Vec(object):
         sess.run(tf.global_variables_initializer())
         return optimizer, loss, x, y, sess, embedding
 
+    # train the model and save word2vec weight matrix to file after training is complete.
     def train(self, epochs):
         with open("../resources/vocab.json") as fp:
             vocab = json.load(fp)

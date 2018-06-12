@@ -1,7 +1,11 @@
+'''
+Author: John Karasev
+'''
+
 import json
 import numpy as np
 
-
+# save json files into binary format for faster reading
 if __name__ == "__main__":
     with open("mapped_categories.json") as fp:
         categories = json.load(fp)

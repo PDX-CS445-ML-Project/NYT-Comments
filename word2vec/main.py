@@ -1,3 +1,8 @@
+'''
+Author: John Karasev
+runs the word2vec models.
+'''
+
 from word2vec import Word2Vec
 import numpy as np
 
@@ -13,8 +18,12 @@ def main():
     npc = np.fromfile("npcontexts.dat", dtype=int)
     print(str(npc.shape[0]))
     print("finished read")
+    # train skipgram model
     skipgram = Word2Vec(npn, npc, 35000, 10, 0.001, 64, "sg.ckpt", batch_size=500)
     skipgram.train(5)
+    # train cbow model
+    cbow = Word2Vec(npc, npn, 35000, 10, 0.001, 64, "sg.ckpt", batch_size=500)
+    cbow.train(5)
 
 
 if __name__ == "__main__":

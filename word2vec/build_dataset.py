@@ -1,3 +1,8 @@
+'''
+Author John Karasev
+This file prepares the dataset for word2vec training
+'''
+
 from word2vec import Word2Vec
 import itertools
 import json
@@ -7,6 +12,7 @@ import sys
 vocab = None
 
 
+# create a json file for word to int mappings.
 def export_vocab(comments, categories, vocab_size, export=True):
     words = []
     for key in comments:
@@ -20,16 +26,15 @@ def export_vocab(comments, categories, vocab_size, export=True):
     return vocab
 
 
+# return the int representation of a word
 def map_func(x):
     if x not in vocab.keys():
         return 0
     else:
         return vocab[x]
 
-    # prints the progress of a process
-    # Vladimir Ignatyev  https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 
-
+# prints the progress bar
 def progress(count, total, suffix=''):
     bar_len = 60
 
@@ -44,17 +49,17 @@ def progress(count, total, suffix=''):
         print("")
 
 
+# given comments and categories, maps words to there int representations and saves the mapped
+# version of comments and categories.
 def map_sentences(comments, categories, export=True):
     global vocab  # global for map function
     with open("../resources/vocab.json") as f:
         vocab = json.load(f)
     print("mapping words to ints")
-    '''
     clen = len(comments.keys())
     for key, index in zip(comments, range(clen)):
         progress(index, clen, suffix="converting comments")
         comments[key] = [list(map(map_func, comment)) for comment in comments[key]]
-    '''
     ctlen = len(categories.keys())
     for key, index in zip(categories, range(ctlen)):
         progress(index, ctlen, suffix="converting categories")
@@ -67,7 +72,8 @@ def map_sentences(comments, categories, export=True):
     return comments, categories
 
 
-def create_trainset(window, export=True):
+# create the training labels for word2vec model.
+def create_trainset(window, export=True):  # window is a hyperparameter
     with open("mapped_comments.json") as f:
         comments = json.load(f)
     sentences = []
@@ -78,6 +84,7 @@ def create_trainset(window, export=True):
     sentences = list(filter(lambda x: x, sentences))
     print("finished")
     sentences = np.array(sentences)
+    # create the contexts and neighbors to train on
     contexts, neighbors = Word2Vec.create_dataset(sentences, window)
     if export:
         npc = np.array(contexts)
@@ -88,13 +95,13 @@ def create_trainset(window, export=True):
 
 if __name__ == "__main__":
     
-    #with open("../dataset/comments.json") as fp:
-        #comments = json.load(fp)
+    with open("../dataset/comments.json") as fp:
+        comments = json.load(fp)
     
-    #with open("../dataset/categories.json") as fp:
-        #categories = json.load(fp)
+    with open("../dataset/categories.json") as fp:
+        categories = json.load(fp)
 
     print("Json loaded")
-    # vocab = export_vocab(comments, categories, 35000)
-    #comments, categories = map_sentences(None, categories)
+    vocab = export_vocab(comments, categories, 35000)
+    comments, categories = map_sentences(None, categories)
     create_trainset(4)
